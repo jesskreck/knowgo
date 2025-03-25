@@ -1,38 +1,87 @@
-# sv
+# KnowGo - Smarte Übergaben leicht gemacht
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Eine Svelte 5 Anwendung zur Verbesserung von Wissenstransfer und Aufgabenübergaben mit KI-Unterstützung.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- 🎙️ **Audio-basierte Übergaben**: Nimm deine Erklärung einfach auf und lass die KI das Chaos strukturieren
+- 🤖 **KI-Analyse**: Automatische Bewertung der Qualität und Klarheit deiner Übergabe
+- 🧠 **Intelligente Rückfragen**: Identifiziert fehlende Informationen und generiert gezielte Nachfragen
+- 📄 **Strukturierte Dokumentation**: Erstellt ein vollständiges Übergabedokument mit allen wichtigen Informationen
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Technologien
 
-# create a new project in my-app
-npx sv create my-app
-```
+- [Svelte 5](https://svelte.dev) mit den neuen Runes-Features
+- [SvelteKit 2](https://kit.svelte.dev) für Routing und Serverless-Funktionen
+- [TailwindCSS 4](https://tailwindcss.com) und [DaisyUI](https://daisyui.com) für das UI
+- [OpenAI API](https://openai.com) für Transkription und KI-Analyse
+- [TypeScript](https://www.typescriptlang.org) für typsichere Entwicklung
 
-## Developing
+## Einrichtung
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+1. Repo klonen:
+   ```bash
+   git clone https://github.com/yourusername/knowgo.git
+   cd knowgo
+   ```
 
-```bash
-npm run dev
+2. Abhängigkeiten installieren:
+   ```bash
+   npm install
+   ```
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+3. Umgebungsvariablen einrichten:
+   Erstelle eine `.env`-Datei im Wurzelverzeichnis mit folgendem Inhalt:
+   ```
+   VITE_OPENAI_API_KEY=dein_openai_api_key
+   VITE_SUPABASE_ANON_KEY=dein_supabase_anon_key
+   VITE_SUPABASE_SERVICE_KEY=dein_supabase_service_key
+   ```
 
-## Building
+4. Entwicklungsserver starten:
+   ```bash
+   npm run dev
+   ```
 
-To create a production version of your app:
+## Deployment
 
-```bash
-npm run build
-```
+Die Anwendung ist für das Deployment auf Netlify optimiert:
 
-You can preview the production build with `npm run preview`.
+1. Stelle sicher, dass `@sveltejs/adapter-static` korrekt konfiguriert ist:
+   ```js
+   // svelte.config.js
+   import adapter from '@sveltejs/adapter-static';
+   
+   export default {
+     kit: {
+       adapter: adapter({
+         fallback: 'index.html' // Wichtig für SPA-Modus
+       })
+     }
+   };
+   ```
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+2. Erstelle eine `_redirects`-Datei im `static`-Verzeichnis:
+   ```
+   /* /index.html 200
+   ```
+
+3. Baue die Anwendung:
+   ```bash
+   npm run build
+   ```
+
+## Projektstruktur
+
+- `/src/components` - Wiederverwendbare UI-Komponenten
+- `/src/lib` - Shared utilities und runes-basierte Services
+- `/src/routes` - Seitenstruktur und Routing
+- `/static` - Statische Assets und Dateien
+
+## Lizenz
+
+MIT
+
+## Kontakt
+
+Jessica Krecker - [https://github.com/yourusername](https://github.com/yourusername)
