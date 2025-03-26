@@ -29,6 +29,6 @@
 			nächste Woche...😫</p>
 	</div>
 
-	<button class="btn btn-primary btn-lg" onclick={navigateForward}>Rette meinen Feierabend!</button
+	<button class="btn btn-primary btn-xl" onclick={navigateForward}>Rette meinen Feierabend!</button
 	>
 </div>

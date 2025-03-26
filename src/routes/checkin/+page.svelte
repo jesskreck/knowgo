@@ -110,10 +110,10 @@
 		{/each}
 	</div>
 
-	<div class="m-auto flex max-w-sm flex-col items-center justify-center">
+	<div class="m-auto flex max-w-m flex-col items-center justify-center">
 		{#if !showExitScreen}
 			<!-- Hinweis wenn Survey noch unbearbeitet -->
-			<p class="prose mb-2 text-center">
+			<p class="prose mb-10 text-center">
 				Was hiervon stört dich in deinem Arbeitsalltag? <span class="font-bold"
 					>Klicke mehrmals</span
 				> auf besonders nervige Sachen.
@@ -138,6 +138,8 @@
 		<PrivacyTooltip note="Wir speichern hier nur deine Auswahl an Stressfaktoren – ohne Nutzerkennung, ohne IP, ohne Cookies.
 Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in einer offenen Statistik."/>
 		
+		<p class="prose text-xs mb-10 text-center">Tipp: Über die Privacy Tooltips erfährst du, was mit deinen Daten passiert.</p>
+
 		<!-- Optionale Buttons zum Kalender und Exit-Screen -->
 		<button class="btn mb-3" onclick={goToCalendar}> Mein Chaos ist komplexer </button>
 

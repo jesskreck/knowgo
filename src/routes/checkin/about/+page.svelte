@@ -23,15 +23,15 @@
 			die Probe stellen und verfeinern.
 		</p>
 		<p>
-			🧩 Ich will hören, wo die <span class="font-bold">Probleme unflexibler Teams</span> wirklich
+			🧩 Ich will hören, wo die <span class="font-bold">Probleme im Bereich Wissenstransfer</span> deiner Erfahrung nach wirklich
 			liegen.
 		</p>
 	</div>
 
 	<button class="btn btn-primary btn-lg mb-6" onclick={navigateForward}
-		>Was ist drin für mich?</button
+		>Was für dich drin ist?</button
 	>
 	<button class="btn btn-outline btn-secondary btn-m" onclick={gotoExit}
-		>Leider nicht meine Themen</button
+		>Nicht deine Themen?</button
 	>
 </div>

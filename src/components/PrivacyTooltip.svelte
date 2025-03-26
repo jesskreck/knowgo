@@ -5,10 +5,10 @@
 </script>
 
 <div
-	class="badge badge-info badge-soft badge-primary badge-sm tooltip tooltip-bottom mt-3 mb-6"
+	class="badge badge-info badge-soft badge-primary tooltip tooltip-bottom mt-3 mb-6"
 	data-tip={note}
 >
-	<svg class="size-[1em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+	<svg class="size-[1em] animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
 		><g fill="currentColor" stroke-linejoin="miter" stroke-linecap="butt"
 			><circle
 				cx="12"
