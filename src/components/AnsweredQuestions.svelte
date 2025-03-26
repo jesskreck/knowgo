@@ -45,21 +45,12 @@
           {#each questions as question}
             <div class="bg-base-100 p-4 rounded-lg">
               <div class="flex justify-between items-start mb-2">
-                <h5 class="font-medium">Frage {question.index + 1}:</h5>
+                <h5 class="font-medium">Frage {question.index + 1} beantwortet 👌</h5>
                 <span class="badge badge-sm {getImportanceClass(question.importance)}">
                   {getImportanceLabel(question.importance)}
                 </span>
               </div>
               <p class="text-sm mb-2">{question.question}</p>
-              
-              <div class="bg-base-300 p-3 rounded text-sm">
-                <span class="font-medium">Deine Antwort:</span> 
-                {#if answers[question.index]?.text}
-                  <p>{answers[question.index].text}</p>
-                {:else}
-                  <p class="italic">Transkription wird verarbeitet...</p>
-                {/if}
-              </div>
             </div>
           {/each}
         </div>

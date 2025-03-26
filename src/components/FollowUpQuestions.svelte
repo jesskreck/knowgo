@@ -4,6 +4,7 @@
 	import AnsweredQuestions from './AnsweredQuestions.svelte';
 	import { createAudioRecorderService } from '$lib/audio-recorder-service.svelte';
 	import type { FollowUpQuestionsResponse } from '$lib/openai-common';
+	import PrivacyTooltip from './PrivacyTooltip.svelte';
   
   type FollowUpQuestionsProps = {
     questions: FollowUpQuestionsResponse | null;
@@ -132,7 +133,7 @@
       </div>
       
       <!-- Fertig-Buttons -->
-      <div class="flex flex-col items-center gap-4">
+      <div class="flex flex-col items-center">
         <button 
           class="btn btn-primary btn-lg" 
           disabled={!allQuestionsAnswered}
@@ -140,6 +141,8 @@
         >
           ✓ Fertig, Übergabe erstellen
         </button>
+        <PrivacyTooltip note="Die Übergabe wird mithilfe der beantworteten Fragen erstellt. Wir speichern keine Antworten - nicht lokal, nicht extern." />
+
 
         <button 
           class="btn btn-outline" 
@@ -147,6 +150,7 @@
         >
           Ohne Fixes fertigstellen
         </button>
+        <PrivacyTooltip note="Die Übergabe wird nur auf Basis der Analyse erstellt - keine Rückfrage fließt mit ein. Wir speichern nichts." />
       </div>
 
       <!-- Beantwortete Fragen -->

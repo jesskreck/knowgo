@@ -18,10 +18,10 @@
 	</div>
 
 	<div class="mb-8">
-		<p>Lass das Chaos in deinem Kopf heraussprudeln.</p>
-        <p>KnowGo macht daraus eine schriftliche Übergabe, die deine Kolleg*innen mit Kusshand entgegen nehmen.</p>
+		<p class="mb-4">Lass das Chaos in deinem Kopf heraussprudeln.</p>
+        <p>KnowGo macht daraus eine <span class="font-bold">schriftliche Übergabe, die deine Kolleg*innen mit Kusshand</span> entgegen nehmen.</p>
 	</div>
 
-	<button class="btn btn-primary btn-lg" onclick={navigateForward}>Versuch dein Glück</button
+	<button class="btn btn-primary btn-lg" onclick={navigateForward}>Aufgabe abgeben 😘</button
 	>
 </div>

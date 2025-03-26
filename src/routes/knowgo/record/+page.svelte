@@ -12,6 +12,7 @@
 		clearError 
 	} from '../../../lib/knowgo-state.svelte';
 	import { transcribeAudio } from '$lib/openai-client';
+	import PrivacyTooltip from '../../../components/PrivacyTooltip.svelte';
 
 	// Lokaler State für die Aufnahme
 	let recordingBlob = $state<Blob | null>(null);
@@ -105,10 +106,12 @@
 				Mach was draus
 			{/if}
 		</button>
+
+		<PrivacyTooltip note="Klickst du auf 'Mach was draus' schicken wir den Text zu deiner Aufnahme zur Analyse an unsere API. Die Analyseergebnisse siehst du gleich."/>
 	{:else}
-		<p class="text-center text-sm mb-4">
+		<!-- <p class="text-center text-sm mb-4">
 			Nimm deine Erklärung auf, um fortzufahren
-		</p>
+		</p> -->
 	{/if}
 
 	{#if localError || knowgoState.error}

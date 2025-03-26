@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HandoverDocumentResponse } from "$lib/openai-common";
 	import Heading from "./Heading.svelte";
+	import PrivacyTooltip from "./PrivacyTooltip.svelte";
 
   let ratingSubmitted = $state(false);
 
@@ -236,11 +237,14 @@
       </div>
       
       <!-- Weiter Button -->
-      <div class="flex justify-center mt-6">
+      <div class="flex flex-col items-center justify-center mt-6">
         <button class="btn btn-primary btn-lg" onclick={onNext}>
           Weiter
         </button>
-      </div>
+        <PrivacyTooltip note="Deine Übergabe existiert nur hier im Browser.
+        Du kannst sie kopieren oder drucken – sie wird nirgendwohin gespeichert.
+        Wenn du das Tab schließt, ist sie weg." />
+        </div>
     </div>
   {:else}
     <div class="w-full flex flex-col items-center justify-center p-8">

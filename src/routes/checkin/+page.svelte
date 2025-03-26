@@ -1,4 +1,6 @@
 <script lang="ts">
+  import PrivacyTooltip from '../../components/PrivacyTooltip.svelte';
+
 	import { goto } from '$app/navigation';
 	import Heading from '../../components/Heading.svelte';
 
@@ -99,7 +101,7 @@
 	<Heading level="h1">Kurze Frage noch: Kennst du das?👇</Heading>
 
 	<!-- Buttons mit Survey Options 🧯 -->
-	<div class="custom-autofit mt-6 mb-8 grid min-h-90 gap-2 space-y-8">
+	<div class="custom-autofit mt-6 grid min-h-90 gap-2 space-y-8">
 		{#each surveyOptions as option, index}
 			<button class={getButtonClass(index)} onclick={() => toggleOption(index)} type="button">
 				<Heading level="h2">{option.emoji}</Heading>
@@ -108,40 +110,34 @@
 		{/each}
 	</div>
 
-	<!-- Hinweis wenn Survey noch unbearbeitet -->
-	<!-- {#if !hasSelection} -->
-	<p class="prose mb-2 text-center">
-		Was hiervon stört dich in deinem Arbeitsalltag? <span class="font-bold">Klicke mehrmals</span> auf
-		die Stressfaktoren, die besonders nervig sind.
-	</p>
-	<p class="prose mb-8 text-center text-xs">
-		Hinweis: Deine geklickten Optionen werden anonymisiert in einer open-source Datenbank
-		gespeichert.
-	</p>
-	<!-- {/if} -->
-
 	<div class="m-auto flex max-w-sm flex-col items-center justify-center">
 		{#if !showExitScreen}
+			<!-- Hinweis wenn Survey noch unbearbeitet -->
+			<p class="prose mb-2 text-center">
+				Was hiervon stört dich in deinem Arbeitsalltag? <span class="font-bold"
+					>Klicke mehrmals</span
+				> auf besonders nervige Sachen.
+			</p>
 			<button
-				class={`btn btn-primary btn-lg btn-block mb-7 h-auto p-2 ${hasSelection ? '' : 'btn-disabled'}`}
+				class={`btn btn-primary btn-xl btn-block h-auto p-2 ${hasSelection ? '' : 'btn-disabled'}`}
 				onclick={submitSurvey}
 				disabled={!hasSelection}
 			>
-				<div>
-					<p>Antworten abschicken 🔒</p>
-					<p class="text-xs"></p>
-				</div>
+				Antworten abschicken
 			</button>
 		{:else}
-			<!-- Nach Absenden: Danke-Nachricht + Weiterleitung -->
-			<div class="mb-7 rounded-lg bg-green-50 p-4 text-center text-green-800">
-				<p class="mb-4 font-semibold">
-					Danke! Jetzt würde mich deine Meinung hierzu interessieren:
-				</p>
-				<button class="btn btn-primary mb-3" onclick={goToAI}> Zum Übergabe Prototypen </button>
-			</div>
+			<p class="prose mb-2 text-center">
+				Als <span class="font-bold">Dankeschön</span> geht's hier zum Mini-Hack, der dir eine 1A schriftliche
+				Übergabe baut, auch wenn dein Kopf noch unsortiert ist.
+			</p>
+			<button class="btn btn-accent btn-xl btn-block h-auto p-2" onclick={goToAI}>
+				Zum Prototyp
+			</button>
 		{/if}
 
+		<PrivacyTooltip note="Wir speichern hier nur deine Auswahl an Stressfaktoren – ohne Nutzerkennung, ohne IP, ohne Cookies.
+Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in einer offenen Statistik."/>
+		
 		<!-- Optionale Buttons zum Kalender und Exit-Screen -->
 		<button class="btn mb-3" onclick={goToCalendar}> Mein Chaos ist komplexer </button>
 

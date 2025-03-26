@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Heading from '../../../components/Heading.svelte';
+	import PrivacyTooltip from '../../../components/PrivacyTooltip.svelte';
 	import { knowgoState, updateTaskDescription, resetState } from '../../../lib/knowgo-state.svelte';
 	import { onMount } from 'svelte';
 
@@ -52,4 +53,6 @@
 	>
 		🎙️ Mic me up
 	</button>
+
+	<PrivacyTooltip note="Was du hier eintippst, bleibt erstmal lokal im Browser. Kein automatischer Versand, kein Tracking. Erst wenn du die Aufzeichnung zu deiner Übergabe abschicken möchtest, senden wir diesen Text als Zusatzinfo an die KI." />
 </div>

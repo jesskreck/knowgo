@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { ChaosCheckResponse } from '$lib/openai-common';
+	import Layout from '../routes/+layout.svelte';
 	import Heading from './Heading.svelte';
+	import PrivacyTooltip from './PrivacyTooltip.svelte';
 
 	// Korrekte Prop-Deklaration für Svelte 5
 	type ChaosCheckProps = {
@@ -20,7 +22,8 @@
 
 	// Funktion zum Generieren der Beschreibung basierend auf Chaos-Score
 	function getChaosDescription(score: number): string {
-		if (score < 30) return 'Fast schon unheimlich wenig Chaos. Sicher, dass du das selbst eingesprochen hast?';
+		if (score < 30)
+			return 'Fast schon unheimlich wenig Chaos. Sicher, dass du das selbst eingesprochen hast?';
 		if (score < 60) return 'Man versteht, dass(!) du was sagen willst. Nur nicht was genau...';
 		return 'Da fliegt ganz schön was durch die Gegend – das wird Fragen geben!';
 	}
@@ -45,11 +48,13 @@
 			<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div class="stats shadow-md">
 					<div class="stat bg-base-200">
-            <div class="stat-value text-center {getChaosColor(chaosCheck.chaos_score)}">
-              {chaosCheck.chaos_score}%
+						<div class="stat-value text-center {getChaosColor(chaosCheck.chaos_score)}">
+							{chaosCheck.chaos_score}%
 						</div>
-            <div class="font-bold text-center mb-3 {getChaosColor(chaosCheck.chaos_score)}">Chaos-Score</div>
-						<p class="text-sm text-center">
+						<div class="mb-3 text-center font-bold {getChaosColor(chaosCheck.chaos_score)}">
+							Chaos-Score
+						</div>
+						<p class="text-center text-sm">
 							{getChaosEmoji(chaosCheck.chaos_score)}
 							{getChaosDescription(chaosCheck.chaos_score)}
 						</p>
@@ -59,8 +64,8 @@
 				<div class="stats shadow-md">
 					<div class="stat bg-base-200">
 						<div class="stat-value text-info text-center">{chaosCheck.clarity_score}%</div>
-						<div class="font-bold text-center mb-3 text-info">Klarheits-Score</div>
-						<div class="text-sm text-center">Als Podcast ganz unterhaltsam. Als Übergabe? Hm.</div>
+						<div class="text-info mb-3 text-center font-bold">Klarheits-Score</div>
+						<div class="text-center text-sm">Als Podcast ganz unterhaltsam. Als Übergabe? Hm.</div>
 					</div>
 				</div>
 			</div>
@@ -76,7 +81,7 @@
 					<h4 class="mb-3 font-bold">Schwachstellen in deiner Übergabe:</h4>
 					<div class="space-y-4">
 						{#each chaosCheck.weaknesses as weakness}
-							<div class="shadow-md rounded-lg p-4">
+							<div class="rounded-lg p-4 shadow-md">
 								<div class="flex items-start gap-2">
 									<span class="text-error mt-1">❌</span>
 									<div>
@@ -99,8 +104,12 @@
 			{/if}
 
 			<!-- Weiter-Button -->
-			<div class="mt-6 flex justify-center">
+			<div class="mt-6 flex flex-col items-center justify-center">
 				<button class="btn btn-primary btn-lg" onclick={onContinue}>Fix it</button>
+				<PrivacyTooltip
+				note="Wenn du auf 'Fix it' klickst, wird die bestehende Transkription und Analyse nochmal an unsere KI geschickt, um gezielt Rückfragen zu generieren.
+				Alles passiert im Arbeitsspeicher – verschwindet beim Neuladen."
+				/>
 			</div>
 		</div>
 	{:else}
