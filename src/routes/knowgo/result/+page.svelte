@@ -17,6 +17,7 @@
 	let localError = $state('');
 	let userRating = $state(0);
 
+
 	onMount(async () => {
 		// Prüfen, ob notwendige Daten vorhanden sind
 		if (!knowgoState.taskDescription || !knowgoState.transcript || !knowgoState.questions) {
@@ -67,11 +68,28 @@
 	});
 
 	// Bewertung speichern
-	function handleRating(rating: number) {
-		userRating = rating;
-		console.log('Bewertung abgegeben:', rating);
-		// In einer realen Anwendung würde hier die Bewertung gespeichert werden
+	async function handleRating(rating: number) {
+	userRating = rating;
+
+	try {
+		const response = await fetch('/api/rating', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ rating })
+		});
+
+		const result = await response.json();
+
+		if (!result.success) {
+			console.error('Fehler beim Speichern der Bewertung:', result.error);
+		} else {
+			console.log('Rating erfolgreich gespeichert!');
+		}
+	} catch (err) {
+		console.error('Fehler beim Rating-Request:', err);
 	}
+}
+
 
 	// Weiter zum Kalender
 	function navigateToCalendar() {

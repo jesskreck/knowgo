@@ -1,5 +1,8 @@
 <script lang="ts">
 	import type { HandoverDocumentResponse } from "$lib/openai-common";
+	import Heading from "./Heading.svelte";
+
+  let ratingSubmitted = $state(false);
 
   
   // Korrekte Prop-Deklaration für Svelte 5
@@ -92,6 +95,7 @@
   function submitRating() {
     if (rating > 0) {
       onRate(rating);
+      ratingSubmitted = true;
     }
   }
   
@@ -213,18 +217,22 @@
       
       <!-- Bewertung -->
       <div class="flex flex-col items-center mt-8 mb-4">
-        <h4 class="font-medium mb-2">Wie hilfreich war diese Übergabe?</h4>
-        <div class="rating rating-lg">
-          {#each Array(5) as _, i}
-            <input 
-              type="radio" 
-              name="rating-5" 
-              class="mask mask-star-2 bg-orange-400" 
-              checked={rating === i + 1}
-              onclick={() => rating = i + 1}
-            />
-          {/each}
-        </div>
+        {#if !ratingSubmitted}
+        <Heading level="h3">Wie hilfreich war diese Übergabe?</Heading>
+          <div class="rating rating-lg">
+            {#each Array(5) as _, i}
+              <input 
+                type="radio" 
+                name="rating-5" 
+                class="mask mask-star-2 bg-orange-400" 
+                checked={rating === i + 1}
+                onclick={() => rating = i + 1}
+              />
+            {/each}
+          </div>
+        {:else}
+        <Heading level="h3">Danke für dein Feedback!</Heading>
+          {/if}
       </div>
       
       <!-- Weiter Button -->
