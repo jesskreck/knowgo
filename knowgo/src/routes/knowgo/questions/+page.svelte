@@ -99,36 +99,43 @@
 </script>
 
 <div class="m-auto flex max-w-4xl flex-col items-center justify-center py-12">
-	<Heading level="h1">Und was ist mit...?</Heading>
-	<p class="prose max-w-xl text-center mb-6">
-		🤔 Die Fragen, die sonst eh kommen würden – jetzt schon beantwortet.
-	</p>
-
-	{#if localError || knowgoState.error}
-		<div class="alert alert-error mb-6 max-w-xl w-full">
-			<p>{localError || knowgoState.error}</p>
-		</div>
-	{/if}
-
-	{#if processingAnswers}
-		<div class="w-full flex flex-col items-center justify-center p-8">
-			<span class="loading loading-spinner loading-lg text-primary"></span>
-			<p class="mt-4 text-lg font-medium">Deine Antworten werden verarbeitet...</p>
-		</div>
+	{#if localLoading}
+	  <div class="w-full flex flex-col items-center justify-center p-8">
+		<span class="loading loading-spinner loading-lg text-primary"></span>
+		<p class="mt-4 text-lg font-medium">Intelligente Rückfragen werden generiert...</p>
+	  </div>
 	{:else}
-		<div class="max-w-3xl w-full">
-			<FollowUpQuestions 
-				questions={knowgoState.questions} 
-				loading={localLoading}
-				onFinished={handleFinished}
-				onTranscribeRequest={handleTranscribeRequest}
-			/>
+	  <Heading level="h1">Und was ist mit...?</Heading>
+	  <p class="prose max-w-xl text-center mb-6">
+		🤔 Die Fragen, die sonst eh kommen würden – jetzt schon beantwortet.
+	  </p>
+  
+	  {#if localError || knowgoState.error}
+		<div class="alert alert-error mb-6 max-w-xl w-full">
+		  <p>{localError || knowgoState.error}</p>
 		</div>
-	{/if}
-
-	{#if !localLoading && !knowgoState.questions}
+	  {/if}
+  
+	  {#if processingAnswers}
+		<div class="w-full flex flex-col items-center justify-center p-8">
+		  <span class="loading loading-spinner loading-lg text-primary"></span>
+		  <p class="mt-4 text-lg font-medium">Deine Antworten werden verarbeitet...</p>
+		</div>
+	  {:else}
+		<div class="max-w-3xl w-full">
+		  <FollowUpQuestions 
+			questions={knowgoState.questions} 
+			loading={false}
+			onFinished={handleFinished}
+			onTranscribeRequest={handleTranscribeRequest}
+		  />
+		</div>
+	  {/if}
+  
+	  {#if !localLoading && !knowgoState.questions}
 		<button class="btn btn-primary mt-6" onclick={goToChaosCheckPage}>
-			Zurück zum Chaos-Check
+		  Zurück zum Chaos-Check
 		</button>
+	  {/if}
 	{/if}
-</div>
+  </div>

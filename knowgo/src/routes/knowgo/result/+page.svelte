@@ -93,7 +93,7 @@
 
 	// Weiter zum Kalender
 	function navigateToCalendar() {
-		goto('/exit');
+		goto('/interviews/calendar');
 	}
 
 	function goToQuestionsPage() {

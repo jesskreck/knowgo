@@ -19,7 +19,7 @@
 		<ul class="steps steps-horizontal w-full">
 			<li
 				class="step"
-				class:step-primary={['drop', 'record', 'chaos', 'questions', 'result'].includes(
+				class:step-primary={['start', 'record', 'chaos', 'questions', 'result'].includes(
 					knowgoState.currentStep
 				)}
 			>

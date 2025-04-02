@@ -36,11 +36,11 @@
 	}
 
 	function goToCalendar() {
-		goto('/calendar');
+		goto('/interviews/calendar');
 	}
 
 	function goToAI() {
-		goto('/checkin/final');
+		goto('/knowgo/start');
 	}
 </script>
 

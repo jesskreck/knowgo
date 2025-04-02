@@ -1,300 +1,265 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import AudioVisualizer from './AudioVisualizer.svelte';
+	import { checkMicrophonePermission, formatTime } from '$lib/utils/audioUtils';
 	import PrivacyTooltip from './PrivacyTooltip.svelte';
+	import { goto } from '$app/navigation';
+	import { knowgoState, updateRecording, updateTranscript, setLoading, setError, clearError } from '$lib/knowgo-state.svelte';
+	import { transcribeAudio } from '$lib/openai-client';
 
-	// Korrekte Prop-Deklaration für Svelte 5
-	type AudioRecorderProps = {
-		label?: string;
-		autostop?: boolean;
-		maxTime?: number;
-		onRecordingReady?: (blob: Blob, duration: number) => void;
-	};
-
-	let {
-		label = 'Aufnahme',
-		autostop = false,
-		maxTime = 300,
-		onRecordingReady = (blob: Blob, duration: number) => {}
-	}: AudioRecorderProps = $props();
-
-	let recording = $state(false);
+	// Status-Management
+	let isRecording = $state(false);
+	let isTranscribing = $state(false);
 	let recordingTime = $state(0);
-	let audioURL = $state<string | null>(null);
-	let audioBlob = $state<Blob | null>(null);
-	let mediaRecorder: MediaRecorder | null = null;
-	let audioChunks: Blob[] = [];
-	let timerInterval: number | null = null;
-	let statusMessage = $state('');
+	let recordingBlob = $state<Blob | null>(null);
 	let permissionDenied = $state(false);
-
-	// Stream für das Beenden der Aufnahme
+	
+	// MediaRecorder Variablen
+	let mediaRecorder: MediaRecorder | null = null;
+	let timerInterval: number | null = null;
 	let mediaStream: MediaStream | null = null;
+	let audioChunks: Blob[] = [];
 
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	// Aufnahme starten
+	function startRecording() {
+		if (isRecording) return;
+
+		// Aufnahmezustand zurücksetzen
+		resetRecordingState();
+		isRecording = true;
+
+		// Timer starten
+		startTimer();
+
+		// Mikrofon anfordern
+		requestMicrophone();
 	}
 
-	function startRecording() {
-		if (recording) return;
+	// Zurücksetzen des Aufnahmezustands
+	function resetRecordingState() {
+		// Vorherigen Stream beenden
+		releaseMediaResources();
 
-		// Immer einen neuen Stream anfordern, um sicherzustellen, dass wir einen frischen Recorder bekommen
-		// Zuerst vorherigen Stream beenden, falls vorhanden
-		if (mediaStream) {
-			mediaStream.getTracks().forEach((track) => track.stop());
-			mediaStream = null;
-		}
-
-		audioChunks = [];
-		audioURL = null;
-		audioBlob = null;
-		recording = true;
+		recordingBlob = null;
 		recordingTime = 0;
-		statusMessage = 'Aufnahme läuft...';
+		audioChunks = [];
+		clearError();
+	}
 
+	// Timer starten
+	function startTimer() {
 		if (timerInterval) clearInterval(timerInterval);
 
 		timerInterval = setInterval(() => {
 			recordingTime++;
-
-			if (autostop && recordingTime >= maxTime) {
-				stopRecording();
-			}
 		}, 1000) as unknown as number;
-
-		// Immer einen neuen Stream anfordern
-		navigator.mediaDevices
-			.getUserMedia({ audio: true })
-			.then((stream) => {
-				mediaStream = stream;
-				mediaRecorder = new MediaRecorder(stream);
-
-				mediaRecorder.ondataavailable = (event) => {
-					if (event.data.size > 0) {
-						audioChunks.push(event.data);
-					}
-				};
-
-				mediaRecorder.onstop = () => {
-					const blob = new Blob(audioChunks, { type: 'audio/webm' });
-					audioBlob = blob;
-					audioURL = URL.createObjectURL(blob);
-					statusMessage = 'Aufnahme bereit';
-
-					if (audioBlob) {
-						onRecordingReady(audioBlob, recordingTime);
-					}
-				};
-
-				// Starte die Aufnahme
-				try {
-					mediaRecorder.start();
-				} catch (error) {
-					console.error('Fehler beim Starten der Aufnahme:', error);
-					stopRecording(); // Stoppen, wenn es einen Fehler gibt
-					statusMessage = 'Fehler beim Starten der Aufnahme. Bitte versuche es erneut.';
-				}
-			})
-			.catch((error) => {
-				console.error('Mikrofon-Zugriff verweigert oder Fehler:', error);
-				permissionDenied = true;
-				statusMessage = 'Mikrofon-Zugriff verweigert oder nicht verfügbar';
-				recording = false;
-			});
 	}
 
-	function stopRecording() {
-		if (!recording) return;
+	// Mikrofon anfordern
+	function requestMicrophone() {
+		navigator.mediaDevices
+			.getUserMedia({ audio: true })
+			.then(setupMediaRecorder)
+			.catch(handlePermissionDenied);
+	}
 
-		recording = false;
-		statusMessage = 'Verarbeite Aufnahme...';
+	// MediaRecorder einrichten
+	function setupMediaRecorder(stream: MediaStream) {
+		mediaStream = stream;
+		mediaRecorder = new MediaRecorder(stream);
+		audioChunks = [];
 
+		mediaRecorder.ondataavailable = (event) => {
+			if (event.data.size > 0) {
+				audioChunks.push(event.data);
+			}
+		};
+
+		// Aufnahme starten
+		try {
+			mediaRecorder.start();
+		} catch (error) {
+			console.error('Fehler beim Starten der Aufnahme:', error);
+			cancelRecording();
+		}
+	}
+
+	// Fehlerbehandlung bei verweigerten Berechtigungen
+	function handlePermissionDenied(error: any) {
+		console.error('Mikrofon-Zugriff verweigert oder Fehler:', error);
+		permissionDenied = true;
+		isRecording = false;
+	}
+
+	// Aufnahme beenden und verarbeiten
+	async function finishRecording() {
+		if (!isRecording) return;
+
+		isRecording = false;
+		isTranscribing = true;
+		stopTimer();
+
+		try {
+			// Aufnahme beenden und auf Blob warten
+			await stopRecording();
+			
+			// Blob aus Audio-Chunks erstellen
+			const blob = new Blob(audioChunks, { type: 'audio/webm' });
+			recordingBlob = blob;
+			
+			// Im State speichern
+			updateRecording(blob);
+
+			// Transkribieren und weiterleiten
+			await processRecording(blob);
+		} catch (error) {
+			console.error('Fehler beim Verarbeiten der Aufnahme:', error);
+			setError('Verarbeitungsfehler: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
+		} finally {
+			isTranscribing = false;
+			releaseMediaResources();
+		}
+	}
+
+	// Verarbeitet die Aufnahme (Transkription und Weiterleitung)
+	async function processRecording(blob: Blob) {
+		try {
+			setLoading(true);
+			
+			// Transkribieren
+			const transcript = await transcribeAudio(blob, 'de', knowgoState.taskDescription);
+			
+			// Im State speichern
+			updateTranscript(transcript);
+			
+			// Zur nächsten Seite navigieren
+			goto('/knowgo/chaos-check');
+		} catch (error) {
+			console.error('Fehler bei der Transkription:', error);
+			setError('Transkriptionsfehler: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	// Aufnahme stoppen und auf Ergebnis warten
+	async function stopRecording(): Promise<void> {
+		if (!mediaRecorder || mediaRecorder.state !== 'recording') return Promise.resolve();
+
+		return new Promise<void>((resolve) => {
+			mediaRecorder!.onstop = () => resolve();
+			mediaRecorder!.stop();
+		});
+	}
+
+	// Timer stoppen
+	function stopTimer() {
 		if (timerInterval) {
 			clearInterval(timerInterval);
 			timerInterval = null;
 		}
+	}
 
-		// Sichere Überprüfung, ob der Recorder aktiv ist
-		try {
-			if (mediaRecorder && mediaRecorder.state === 'recording') {
-				mediaRecorder.stop();
+	// Aufnahme abbrechen
+	function cancelRecording() {
+		if (isTranscribing) {
+			isTranscribing = false;
+		} else if (isRecording) {
+			// Wenn wir aufnehmen, Aufnahme abbrechen
+			isRecording = false;
+			stopTimer();
+			
+			try {
+				if (mediaRecorder && mediaRecorder.state === 'recording') {
+					mediaRecorder.stop();
+				}
+			} catch (error) {
+				console.error('Fehler beim Stoppen der Aufnahme:', error);
 			}
-		} catch (error) {
-			console.error('Fehler beim Stoppen der Aufnahme:', error);
-		}
+			
+			releaseMediaResources();
 
-		// Alle Tracks des Streams beenden, um das Mikrofon freizugeben
-		if (mediaStream) {
-			mediaStream.getTracks().forEach((track) => track.stop());
+			// Alles zurücksetzen
+			mediaRecorder = null;
+			recordingTime = 0;
+			recordingBlob = null;
+			audioChunks = [];
 		}
 	}
 
-	function discardRecording() {
-		if (recording) {
-			stopRecording();
-		}
-
-		// Media-Ressourcen freigeben
-		if (audioURL) {
-			URL.revokeObjectURL(audioURL);
-		}
-
-		// Stream beenden
+	// Medienressourcen freigeben
+	function releaseMediaResources() {
 		if (mediaStream) {
 			mediaStream.getTracks().forEach((track) => track.stop());
 			mediaStream = null;
 		}
-
-		// Recorder zurücksetzen
-		mediaRecorder = null;
-
-		audioURL = null;
-		audioBlob = null;
-		recordingTime = 0;
-		statusMessage = '';
 	}
 
+	// Komponenten-Lifecycle
 	onMount(() => {
-		// Initial nur Berechtigungen prüfen, aber keinen Stream anfordern
-		navigator.mediaDevices
-			.getUserMedia({ audio: true })
-			.then((stream) => {
-				// Sofort wieder beenden, damit das Mikrofon nicht aktiv bleibt
-				stream.getTracks().forEach((track) => track.stop());
-			})
-			.catch((error) => {
-				console.error('Mikrofon-Zugriff verweigert oder Fehler:', error);
-				permissionDenied = true;
-				statusMessage = 'Mikrofon-Zugriff verweigert oder nicht verfügbar';
-			});
+		// Initial nur Berechtigungen prüfen
+		checkMicrophonePermission().then((granted) => {
+			permissionDenied = !granted;
+		});
 	});
 
 	onDestroy(() => {
-		if (timerInterval) {
-			clearInterval(timerInterval);
-		}
-
-		if (audioURL) {
-			URL.revokeObjectURL(audioURL);
-		}
-
-		// Wichtig: Alle Tracks des Streams beenden, wenn die Komponente zerstört wird
-		if (mediaStream) {
-			mediaStream.getTracks().forEach((track) => track.stop());
-		}
+		stopTimer();
+		releaseMediaResources();
 	});
 </script>
 
-<div class="audio-recorder bg-base-200 w-full rounded-lg p-4 shadow-sm">
-	<div class="flex flex-col items-center gap-4">
-		<!-- Status und Timer -->
-		<div class="mb-2 flex w-full items-center justify-between">
-			<span class="text-sm font-medium">{label}</span>
-			<span class="font-mono text-lg" class:text-error={recordingTime > maxTime - 30 && recording}>
-				{formatTime(recordingTime)}
-			</span>
-		</div>
-
-		<!-- Statusnachricht -->
-		{#if statusMessage}
-			<p class="mb-2 text-center text-sm">{statusMessage}</p>
-		{/if}
-
-		<!-- Fehleranzeige bei verweigerten Rechten -->
-		{#if permissionDenied}
-			<div class="alert alert-error">
-				<p>
-					Mikrofon-Zugriff wurde verweigert. Bitte erlaube den Zugriff in deinen
-					Browser-Einstellungen.
-				</p>
-			</div>
-		{/if}
-
-		<!-- Aufnahme-Visualisierung -->
-		{#if recording}
-			<div
-				class="bg-base-300 flex h-12 w-full items-center justify-center overflow-hidden rounded-lg"
+<div class="flex flex-col gap-4">
+	<div class="flex flex-row items-center justify-around py-5">
+		{#if !isRecording && !isTranscribing}
+			<!-- Start Recording Button -->
+			<button
+				class="btn btn-primary btn-xl btn-circle"
+				onclick={startRecording}
+				disabled={permissionDenied}
+				aria-label="Aufnahme starten"
 			>
-				<div class="recording-animation">
-					<div class="bar"></div>
-					<div class="bar"></div>
-					<div class="bar"></div>
-					<div class="bar"></div>
-					<div class="bar"></div>
+				🎙️
+			</button>
+
+			{#if permissionDenied}
+				<div class="alert alert-error mt-2">
+					<p>
+						Mikrofon-Zugriff wurde verweigert. Bitte erlaube den Zugriff in deinen
+						Browser-Einstellungen.
+					</p>
 				</div>
+			{/if}
+		{:else}
+			<!-- Recording Controls -->
+			<button
+				class="btn btn-circle btn-primary btn-outline btn-xl"
+				onclick={cancelRecording}
+				aria-label={isTranscribing ? "Transkription abbrechen" : "Aufnahme abbrechen"}
+			>
+				✕
+			</button>
+
+			<AudioVisualizer animated={isRecording && !isTranscribing} />
+
+			<!-- Timer -->
+			<div class="font-mono text-lg" aria-live="polite" aria-label="Aufnahmezeit">
+				{formatTime(recordingTime)}
 			</div>
-		{/if}
 
-		<!-- Audio Player für aufgenommene Audio -->
-		{#if audioURL && !recording}
-			<audio src={audioURL} controls class="w-full"></audio>
-		{/if}
-
-		<!-- Steuerungselemente -->
-		<div class="mt-2 flex gap-2">
-			{#if !recording && !audioURL}
-				<button class="btn btn-primary" onclick={startRecording} disabled={permissionDenied}>
-					<span>🎙️ Aufnahme starten</span>
-				</button>
-				{:else if recording}
-				<button class="btn btn-error" onclick={stopRecording}>
-					<span>⏹️ Aufnahme beenden</span>
-				</button>
+			<!-- Finish Button -->
+			<button
+				class="btn btn-circle btn-primary btn-xl relative"
+				onclick={finishRecording}
+				disabled={isTranscribing}
+				aria-label="Aufnahme beenden und senden"
+			>
+				{#if isTranscribing}
+					<span class="loading loading-spinner loading-xs absolute"></span>
 				{:else}
-				<button class="btn btn-outline" onclick={discardRecording}>
-					<span>🗑️ Verwerfen</span>
-				</button>
-				<button class="btn btn-primary" onclick={startRecording}>
-					<span>🔄 Neu aufnehmen</span>
-				</button>
+					↑
 				{/if}
-			</div>
-			<PrivacyTooltip
-				note="Deine Audioaufnahme wird nicht gespeichert.
-Sie wird einmalig an OpenAI geschickt, um daraus einen Text zu machen.
-Danach ist die Aufnahme weg – auch bei uns.
-Hinweis: OpenAI kann laut ihren Nutzungsbedingungen Audiodaten zu Trainingszwecken speichern."
-			/>
+			</button>
+		{/if}
 	</div>
 </div>
-
-<style>
-	.recording-animation {
-		display: flex;
-		align-items: center;
-		height: 100%;
-		gap: 3px;
-	}
-
-	.bar {
-		width: 4px;
-		height: 10px;
-		animation: sound 0.5s linear infinite alternate;
-	}
-
-	.bar:nth-child(1) {
-		animation-delay: 0s;
-	}
-	.bar:nth-child(2) {
-		animation-delay: 0.1s;
-	}
-	.bar:nth-child(3) {
-		animation-delay: 0.2s;
-	}
-	.bar:nth-child(4) {
-		animation-delay: 0.1s;
-	}
-	.bar:nth-child(5) {
-		animation-delay: 0.3s;
-	}
-
-	@keyframes sound {
-		0% {
-			height: 5px;
-		}
-		100% {
-			height: 25px;
-		}
-	}
-</style>

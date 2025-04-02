@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-	import QuestionItem from './QuestionItem.svelte'
+	import QuestionItem from './QuestionItem.svelte';
 	import AnsweredQuestions from './AnsweredQuestions.svelte';
-	import { createAudioRecorderService } from '$lib/audio-recorder-service.svelte';
 	import type { FollowUpQuestionsResponse } from '$lib/openai-common';
 	import PrivacyTooltip from './PrivacyTooltip.svelte';
   
@@ -27,8 +26,8 @@
     questions && questions.questions.every((_, idx) => !!questionAnswers[idx]?.blob)
   );
   
-  // Audio-Recorder-Service
-  const audioRecorder = createAudioRecorderService();
+  // Neuer Zustand für die Animation
+  let justAnswered = $state<number | null>(null);
   
   // Umgang mit fertiger Aufnahme
   function handleRecordingComplete(index: number, blob: Blob, duration: number) {
@@ -38,9 +37,17 @@
       text: null // Wird später durch Transkription ersetzt
     };
     
-    // Explizites Update des Antworten-Sets für Reaktivität
-    answeredQuestions = new Set(answeredQuestions);
-    answeredQuestions.add(index);
+    // Animation auslösen
+    justAnswered = index;
+    
+    // Nach kurzer Zeit den Animation-Zustand zurücksetzen
+    setTimeout(() => {
+      justAnswered = null;
+      
+      // Explizites Update des Antworten-Sets für Reaktivität
+      answeredQuestions = new Set(answeredQuestions);
+      answeredQuestions.add(index);
+    }, 500); // Dauer für die Animation
     
     // Transkriptionsanfrage auslösen
     onTranscribeRequest(index, blob);
@@ -48,36 +55,12 @@
   
   // Beenden und Übergabe erstellen
   function handleFinish() {
-    // Falls noch eine Aufnahme läuft, diese beenden
-    if (audioRecorder.state.isRecording) {
-      audioRecorder.stopRecording().then(({ blob, duration }) => {
-        if (audioRecorder.state.currentRecordingId !== null) {
-          const index = audioRecorder.state.currentRecordingId as number;
-          handleRecordingComplete(index, blob, duration);
-          // Nach kurzem Delay fortfahren, damit die UI Zeit hat, sich zu aktualisieren
-          setTimeout(() => onFinished(questionAnswers), 100);
-        }
-      }).catch(error => {
-        console.error('Fehler beim Beenden der Aufnahme:', error);
-        onFinished(questionAnswers);
-      });
-    } else {
-      onFinished(questionAnswers);
-    }
+    onFinished(questionAnswers);
   }
 
   // Ohne Fixes fertigstellen
   function handleFinishWithoutFixes() {
-    // Falls noch eine Aufnahme läuft, diese beenden
-    if (audioRecorder.state.isRecording) {
-      audioRecorder.stopRecording().catch(error => {
-        console.error('Fehler beim Beenden der Aufnahme:', error);
-      }).finally(() => {
-        onFinished(questionAnswers);
-      });
-    } else {
-      onFinished(questionAnswers);
-    }
+    onFinished(questionAnswers);
   }
   
   // Sortierte und gefilterte Fragen
@@ -87,7 +70,12 @@
     return questions.questions
       .map((q, i) => ({ ...q, index: i }))
       .filter(q => !answeredQuestions.has(q.index))
-      .sort((a, b) => b.importance - a.importance);
+      .sort((a, b) => b.importance - a.importance); // Nach Wichtigkeit sortieren, wichtigste zuerst
+  }
+  
+  // Zähle die Gesamtzahl der Fragen
+  function getTotalQuestionCount() {
+    return questions?.questions.length || 0;
   }
   
   function getAnsweredQuestions() {
@@ -96,13 +84,8 @@
     return questions.questions
       .map((q, i) => ({ ...q, index: i }))
       .filter(q => answeredQuestions.has(q.index))
-      .sort((a, b) => b.importance - a.importance);
+      .sort((a, b) => a.index - b.index); // Nach ursprünglicher Reihenfolge sortieren
   }
-  
-  // Ressourcen freigeben beim Zerstören der Komponente
-  onDestroy(() => {
-    audioRecorder.cleanup();
-  });
 </script>
 
 <div class="follow-up-questions w-full">
@@ -116,12 +99,17 @@
       
       <!-- Fragen mit Beantwortungsmöglichkeit -->
       <div class="space-y-8 mb-8">
-        {#each getUnansweredQuestions() as question}
-          <QuestionItem
-            question={question}
-            audioRecorderService={audioRecorder}
-            onRecordingComplete={handleRecordingComplete}
-          />
+        {#each getUnansweredQuestions() as question (question.index)}
+          <div 
+            class="question-item" 
+            class:sliding-right={justAnswered === question.index}
+          >
+            <QuestionItem
+              question={question}
+              onRecordingComplete={handleRecordingComplete}
+              totalQuestions={getTotalQuestionCount()}
+            />
+          </div>
         {/each}
 
         <!-- Wenn alle Fragen beantwortet wurden -->
@@ -165,3 +153,14 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .question-item {
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+  }
+  
+  .sliding-right {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+</style>

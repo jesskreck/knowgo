@@ -3,7 +3,7 @@
 	import Heading from '../../../components/Heading.svelte';
 
 	function navigateForward() {
-		goto('/knowgo/drop');
+		goto('/knowgo');
 	}
 </script>
 

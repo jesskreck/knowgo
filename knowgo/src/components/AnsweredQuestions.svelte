@@ -42,8 +42,8 @@
       </div>
       <div class="collapse-content">
         <div class="space-y-4">
-          {#each questions as question}
-            <div class="bg-base-100 p-4 rounded-lg">
+          {#each questions as question, i (question.index)}
+            <div class="answered-question bg-base-100 p-4 rounded-lg" style="--delay: {i * 0.1}s">
               <div class="flex justify-between items-start mb-2">
                 <h5 class="font-medium">Frage {question.index + 1} beantwortet 👌</h5>
                 <span class="badge badge-sm {getImportanceClass(question.importance)}">
@@ -58,3 +58,21 @@
     </div>
   </div>
 {/if}
+
+<style>
+  .answered-question {
+    animation: slide-up 0.5s ease-out backwards;
+    animation-delay: var(--delay, 0s);
+  }
+  
+  @keyframes slide-up {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+</style>

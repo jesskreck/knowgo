@@ -1,34 +1,30 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Heading from '../components/Heading.svelte';
+	import meme from "$lib/assets/urlaub.gif"
 
 	function navigateForward() {
-		goto('/checkin/about');
+		goto('/knowgo/start');
 	}
 </script>
-
-<div class="max-w-4xl m-auto flex flex-col items-center justify-center py-12 text-center">
-	<p>Eigentlich wolltest du schon weg sein 👋💨</p>
-	<p>... und dann steht wieder jemand vor dir:</p>
-
-	<div class="bg-accent shadow-lg rounded-2xl p-6 m-10">
-		<h1 class="text-4xl">🥺</h1>
-		<h1 class="mb-2 text-xl">👉👈</h1>
-		<Heading level="h2" color="accent-content">Wie hast du das damals nochmal gelöst?</Heading>
-		<Heading level="h2" color="accent-content">Was genau muss ich da machen?</Heading>
+<div class="relative w-full max-w-full sm:max-w-xl m-auto">
+	<img src={meme} alt="Mann mit Laptop im Wasser" class="w-full" />
+	<div class="absolute top-4 left-0 w-full text-center">
+		<p class="text-white text-3xl font-bold uppercase drop-shadow-lg sm:text-5xl">
+		Wenn du denkst, du bist im Urlaub:
+	  </p>
 	</div>
+  </div>
 
-	<div class="mb-8">
-		<p>Du weißt:</p>
+<div class="max-w-xl m-auto flex flex-col items-center justify-center py-12 text-center">
+	
 
-		<Heading level="h3">Selbst machen würde am schnellsten gehen.</Heading>
-		<Heading level="h3">
-			Aber das löst das Problem nicht.</Heading
-		>
-		<p class="m-10">Dann fragen sie dich morgen wieder. 😒 Und übermorgen...😤 Und
-			nächste Woche...😫</p>
-	</div>
+	
+		<Heading level="h1" color="primary" short>KnowGo</Heading>
+		<Heading level="h2">Übergabe in 2 Minuten</Heading>
+		<Heading level="h3">Abschalten. Nicht nur das Hintergrundbild wechseln.</Heading>
 
-	<button class="btn btn-primary btn-xl" onclick={navigateForward}>Rette meinen Feierabend!</button
+
+	<button class="mt-8 btn btn-primary btn-xl" onclick={navigateForward}>Rette meinen Urlaub!</button
 	>
 </div>

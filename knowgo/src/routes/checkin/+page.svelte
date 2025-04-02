@@ -85,7 +85,7 @@
 	function goToAI() {
 		// Store survey results before navigating
 		storeSurveyResults();
-		goto('/checkin/final');
+		goto('/knowgo/start');
 	}
 
 	function goToCalendar() {

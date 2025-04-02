@@ -20,7 +20,7 @@ export const knowgoState = $state({
   document: null as HandoverDocumentResponse | null,
   
   // Status-Flags
-  currentStep: 'drop' as 'drop' | 'record' | 'chaos' | 'questions' | 'result',
+  currentStep: 'start' as 'start' | 'record' | 'chaos' | 'questions' | 'result',
   loading: false,
   error: ''
 });
@@ -94,15 +94,15 @@ export function resetState() {
   knowgoState.questions = null;
   knowgoState.answers = {};
   knowgoState.document = null;
-  knowgoState.currentStep = 'drop';
+  knowgoState.currentStep = 'start';
   knowgoState.loading = false;
   knowgoState.error = '';
 }
 
 // Navigation zum nächsten oder vorherigen Schritt
 export function goToNextStep() {
-  const steps: Array<'drop' | 'record' | 'chaos' | 'questions' | 'result'> = [
-    'drop', 'record', 'chaos', 'questions', 'result'
+  const steps: Array<'start' | 'record' | 'chaos' | 'questions' | 'result'> = [
+    'start', 'record', 'chaos', 'questions', 'result'
   ];
   
   const currentIndex = steps.indexOf(knowgoState.currentStep);
@@ -112,8 +112,8 @@ export function goToNextStep() {
 }
 
 export function goToPreviousStep() {
-  const steps: Array<'drop' | 'record' | 'chaos' | 'questions' | 'result'> = [
-    'drop', 'record', 'chaos', 'questions', 'result'
+  const steps: Array<'start' | 'record' | 'chaos' | 'questions' | 'result'> = [
+    'start', 'record', 'chaos', 'questions', 'result'
   ];
   
   const currentIndex = steps.indexOf(knowgoState.currentStep);

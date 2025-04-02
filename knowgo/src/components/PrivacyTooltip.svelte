@@ -1,11 +1,11 @@
 <script lang="ts">
 
-	let { note } = $props();
+	let { note, open, primary }: { note: string, open?: boolean, primary?: boolean} = $props();
 
 </script>
 
 <div
-	class="badge badge-info badge-soft badge-primary tooltip tooltip-bottom mt-3 mb-6"
+	class="badge badge-info  badge-primary tooltip tooltip-bottom mt-3 mb-6 {open? 'tooltip-open' : ''} {primary? 'tooltip-primary badge-outline' : 'badge-soft'}"
 	data-tip={note}
 >
 	<svg class="size-[1em] animate-pulse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
