@@ -7,7 +7,7 @@
 	}
 
     function goToCalendar() {
-        goto('/calendar')
+        goto('/interviews/calendar')
     }
 
     function goToExit() {

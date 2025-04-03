@@ -29,7 +29,7 @@
 	<nav>
 			  <h6 class="footer-title">Infos</h6>
 			  <a class="link link-hover" href="/about">Über KnowGo</a>
-			  <a class="link link-hover">Über Mich</a>
+			  <a class="link link-hover" href="/about/me">Über Mich</a>
 			</nav>
 			<nav>
 				<h6 class="footer-title">KnowGo</h6>

@@ -9,6 +9,10 @@
 	function gotoExit() {
 		goto('/exit');
 	}
+
+	function goToMe() {
+		goto('/about/me')
+	}
 </script>
 
 <div class="m-auto flex max-w-xl flex-col items-center justify-center py-12">
@@ -42,6 +46,10 @@
 			</div>
 		</div> -->
 	</div>
+
+	<button class="btn btn-primary btn-lg mb-6" onclick={goToMe}
+		>Wer steckt dahinter?</button
+	>
 
 	<button class="btn btn-primary btn-lg mb-6" onclick={navigateForward}
 		>Was für dich drin ist?</button
