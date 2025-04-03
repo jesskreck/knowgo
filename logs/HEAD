@@ -10,3 +10,4 @@ c13073e6af278fc41f616a59a71486e808f0485a 81375ab5300ac0fe3b9e8ac289b1894ef2f1682
 ce4bf7cb44a82e0dffe93f4828de394751624f75 df54aef44bcc6de9614e20a6e16f7df8aa5a351f jesskreck <krecker.jessica@gmail.com> 1743629072 +0200	commit: Major Update V0.0.2
 df54aef44bcc6de9614e20a6e16f7df8aa5a351f 1e73eae95c44f706c5d38ee131479e8adc964d8e jesskreck <krecker.jessica@gmail.com> 1743654168 +0200	commit: codebase.md deleted
 1e73eae95c44f706c5d38ee131479e8adc964d8e 1e73eae95c44f706c5d38ee131479e8adc964d8e jesskreck <krecker.jessica@gmail.com> 1743654871 +0200	reset: moving to HEAD
+1e73eae95c44f706c5d38ee131479e8adc964d8e af15c71c9c6b1ef266177441cd04e1f019441f8b jesskreck <krecker.jessica@gmail.com> 1743655093 +0200	commit: Fix: Worktree moved to subfolder
