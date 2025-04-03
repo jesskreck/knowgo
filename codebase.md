@@ -95,7 +95,7 @@ yarn.lock
 {
 	"name": "knowgo",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -357,8 +357,8 @@ export {};
       </div>
       <div class="collapse-content">
         <div class="space-y-4">
-          {#each questions as question}
-            <div class="bg-base-100 p-4 rounded-lg">
+          {#each questions as question, i (question.index)}
+            <div class="answered-question bg-base-100 p-4 rounded-lg" style="--delay: {i * 0.1}s">
               <div class="flex justify-between items-start mb-2">
                 <h5 class="font-medium">Frage {question.index + 1} beantwortet 👌</h5>
                 <span class="badge badge-sm {getImportanceClass(question.importance)}">
@@ -374,6 +374,23 @@ export {};
   </div>
 {/if}
 
+<style>
+  .answered-question {
+    animation: slide-up 0.5s ease-out backwards;
+    animation-delay: var(--delay, 0s);
+  }
+  
+  @keyframes slide-up {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+</style>
 ```
 
 # src\components\AudioRecorder.svelte
@@ -745,6 +762,8 @@ export {};
 	};
 
 	let { chaosCheck, loading, onContinue = () => {} }: ChaosCheckProps = $props();
+	let showDetails = $state(false);
+
 
 	// Funktion zum Generieren der Farbe basierend auf Chaos-Score
 	function getChaosColor(score: number): string {
@@ -771,87 +790,96 @@ export {};
 
 <div class="w-full p-6">
 	{#if loading}
-		<div class="flex w-full flex-col items-center justify-center p-8">
-			<span class="loading loading-spinner loading-lg text-primary"></span>
-			<p class="mt-4 text-lg font-medium">KI analysiert deine Übergabe...</p>
-		</div>
+	  <div class="flex w-full flex-col items-center justify-center p-8">
+		<span class="loading loading-spinner loading-lg text-primary"></span>
+		<p class="mt-4 text-lg font-medium">KI analysiert deine Übergabe...</p>
+	  </div>
 	{:else if chaosCheck}
-		<div class="w-full">
-			<!-- Score-Anzeige -->
-			<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-				<div class="stats shadow-md">
-					<div class="stat bg-base-200">
-						<div class="stat-value text-center {getChaosColor(chaosCheck.chaos_score)}">
-							{chaosCheck.chaos_score}%
-						</div>
-						<div class="mb-3 text-center font-bold {getChaosColor(chaosCheck.chaos_score)}">
-							Chaos-Score
-						</div>
-						<p class="text-center text-sm">
-							{getChaosEmoji(chaosCheck.chaos_score)}
-							{getChaosDescription(chaosCheck.chaos_score)}
-						</p>
-					</div>
-				</div>
-
-				<div class="stats shadow-md">
-					<div class="stat bg-base-200">
-						<div class="stat-value text-info text-center">{chaosCheck.clarity_score}%</div>
-						<div class="text-info mb-3 text-center font-bold">Klarheits-Score</div>
-						<div class="text-center text-sm">Als Podcast ganz unterhaltsam. Als Übergabe? Hm.</div>
-					</div>
-				</div>
+	  <!-- Hier kommt der neue zweistufige Ansatz -->
+	  <div class="w-full">
+		<!-- Score-Anzeige (immer sichtbar) -->
+		<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+		  <div class="stats shadow-md">
+			<div class="stat bg-base-200">
+			  <div class="stat-value text-center {getChaosColor(chaosCheck.chaos_score)}">
+				{chaosCheck.chaos_score}%
+			  </div>
+			  <div class="mb-3 text-center font-bold {getChaosColor(chaosCheck.chaos_score)}">
+				Chaos-Score
+			  </div>
+			  <p class="text-center text-sm">
+				{getChaosEmoji(chaosCheck.chaos_score)}
+				{getChaosDescription(chaosCheck.chaos_score)}
+			  </p>
 			</div>
-
-			<!-- Kategorie -->
+		  </div>
+  
+		  <div class="stats shadow-md">
+			<div class="stat bg-base-200">
+			  <div class="stat-value text-info text-center">{chaosCheck.clarity_score}%</div>
+			  <div class="text-info mb-3 text-center font-bold">Klarheits-Score</div>
+			  <div class="text-center text-sm">Als Podcast ganz unterhaltsam. Als Übergabe? Hm.</div>
+			</div>
+		  </div>
+		</div>
+		
+		<!-- "Details einblenden" Button -->
+		<div class="flex justify-center mb-6">
+		  <button class="btn btn-primary" onclick={() => showDetails = !showDetails}>
+			{showDetails ? 'Details ausblenden' : 'Details einblenden'}
+		  </button>
+		</div>
+		
+		{#if showDetails}
+		  <!-- Kategorie -->
+		  <div class="bg-base-300 mb-6 rounded-lg p-4 shadow">
+			<Heading level="h3">🏆 Kategorie: {chaosCheck.category}</Heading>
+		  </div>
+  
+		  <!-- Schwachstellen -->
+		  {#if chaosCheck.weaknesses && chaosCheck.weaknesses.length > 0}
+			<div class="mb-6">
+			  <h4 class="mb-3 font-bold">Schwachstellen in deiner Übergabe:</h4>
+			  <div class="space-y-4">
+				{#each chaosCheck.weaknesses as weakness}
+				  <div class="rounded-lg p-4 shadow-md">
+					<div class="flex items-start gap-2">
+					  <span class="text-error mt-1">❌</span>
+					  <div>
+						<p class="font-medium">"{weakness.quote}"</p>
+						<p class="mt-1 text-sm">→ {weakness.explanation}</p>
+					  </div>
+					</div>
+				  </div>
+				{/each}
+			  </div>
+			</div>
+		  {/if}
+  
+		  <!-- Gesamtbewertung -->
+		  {#if chaosCheck.overall_assessment}
 			<div class="bg-base-300 mb-6 rounded-lg p-4 shadow">
-				<Heading level="h3">🏆 Kategorie: {chaosCheck.category}</Heading>
+			  <h4 class="mb-2 font-bold">Zusammenfassung:</h4>
+			  <p>{chaosCheck.overall_assessment}</p>
 			</div>
-
-			<!-- Schwachstellen -->
-			{#if chaosCheck.weaknesses && chaosCheck.weaknesses.length > 0}
-				<div class="mb-6">
-					<h4 class="mb-3 font-bold">Schwachstellen in deiner Übergabe:</h4>
-					<div class="space-y-4">
-						{#each chaosCheck.weaknesses as weakness}
-							<div class="rounded-lg p-4 shadow-md">
-								<div class="flex items-start gap-2">
-									<span class="text-error mt-1">❌</span>
-									<div>
-										<p class="font-medium">"{weakness.quote}"</p>
-										<p class="mt-1 text-sm">→ {weakness.explanation}</p>
-									</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Gesamtbewertung -->
-			{#if chaosCheck.overall_assessment}
-				<div class="bg-base-300 mb-6 rounded-lg p-4 shadow">
-					<h4 class="mb-2 font-bold">Zusammenfassung:</h4>
-					<p>{chaosCheck.overall_assessment}</p>
-				</div>
-			{/if}
-
-			<!-- Weiter-Button -->
-			<div class="mt-6 flex flex-col items-center justify-center">
-				<button class="btn btn-primary btn-lg" onclick={onContinue}>Fix it</button>
-				<PrivacyTooltip
-				note="Wenn du auf 'Fix it' klickst, wird die bestehende Transkription und Analyse nochmal an unsere KI geschickt, um gezielt Rückfragen zu generieren.
-				Alles passiert im Arbeitsspeicher – verschwindet beim Neuladen."
-				/>
-			</div>
-		</div>
+		  {/if}
+  
+		  <!-- Weiter-Button -->
+		  <div class="mt-6 flex flex-col items-center justify-center">
+			<button class="btn btn-primary btn-lg" onclick={onContinue}>Fix it</button>
+			<PrivacyTooltip
+			note="Wenn du auf 'Fix it' klickst, wird die bestehende Transkription und Analyse nochmal an unsere KI geschickt, um gezielt Rückfragen zu generieren.
+			Alles passiert im Arbeitsspeicher – verschwindet beim Neuladen."
+			/>
+		  </div>
+		{/if}
+	  </div>
 	{:else}
-		<div class="flex w-full flex-col items-center justify-center p-8">
-			<p class="text-error">Keine Analyse verfügbar. Bitte versuche es erneut.</p>
-		</div>
+	  <div class="flex w-full flex-col items-center justify-center p-8">
+		<p class="text-error">Keine Analyse verfügbar. Bitte versuche es erneut.</p>
+	  </div>
 	{/if}
-</div>
-
+  </div>
 ```
 
 # src\components\FollowUpQuestions.svelte
@@ -885,6 +913,9 @@ export {};
     questions && questions.questions.every((_, idx) => !!questionAnswers[idx]?.blob)
   );
   
+  // Neuer Zustand für die Animation
+  let justAnswered = $state<number | null>(null);
+  
   // Umgang mit fertiger Aufnahme
   function handleRecordingComplete(index: number, blob: Blob, duration: number) {
     // Antwort speichern
@@ -893,9 +924,17 @@ export {};
       text: null // Wird später durch Transkription ersetzt
     };
     
-    // Explizites Update des Antworten-Sets für Reaktivität
-    answeredQuestions = new Set(answeredQuestions);
-    answeredQuestions.add(index);
+    // Animation auslösen
+    justAnswered = index;
+    
+    // Nach kurzer Zeit den Animation-Zustand zurücksetzen
+    setTimeout(() => {
+      justAnswered = null;
+      
+      // Explizites Update des Antworten-Sets für Reaktivität
+      answeredQuestions = new Set(answeredQuestions);
+      answeredQuestions.add(index);
+    }, 500); // Dauer für die Animation
     
     // Transkriptionsanfrage auslösen
     onTranscribeRequest(index, blob);
@@ -918,7 +957,12 @@ export {};
     return questions.questions
       .map((q, i) => ({ ...q, index: i }))
       .filter(q => !answeredQuestions.has(q.index))
-      .sort((a, b) => b.importance - a.importance);
+      .sort((a, b) => b.importance - a.importance); // Nach Wichtigkeit sortieren, wichtigste zuerst
+  }
+  
+  // Zähle die Gesamtzahl der Fragen
+  function getTotalQuestionCount() {
+    return questions?.questions.length || 0;
   }
   
   function getAnsweredQuestions() {
@@ -927,7 +971,7 @@ export {};
     return questions.questions
       .map((q, i) => ({ ...q, index: i }))
       .filter(q => answeredQuestions.has(q.index))
-      .sort((a, b) => b.importance - a.importance);
+      .sort((a, b) => a.index - b.index); // Nach ursprünglicher Reihenfolge sortieren
   }
 </script>
 
@@ -942,11 +986,17 @@ export {};
       
       <!-- Fragen mit Beantwortungsmöglichkeit -->
       <div class="space-y-8 mb-8">
-        {#each getUnansweredQuestions() as question}
-          <QuestionItem
-            question={question}
-            onRecordingComplete={handleRecordingComplete}
-          />
+        {#each getUnansweredQuestions() as question (question.index)}
+          <div 
+            class="question-item" 
+            class:sliding-right={justAnswered === question.index}
+          >
+            <QuestionItem
+              question={question}
+              onRecordingComplete={handleRecordingComplete}
+              totalQuestions={getTotalQuestionCount()}
+            />
+          </div>
         {/each}
 
         <!-- Wenn alle Fragen beantwortet wurden -->
@@ -990,6 +1040,17 @@ export {};
     </div>
   {/if}
 </div>
+
+<style>
+  .question-item {
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+  }
+  
+  .sliding-right {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+</style>
 ```
 
 # src\components\HandoverDocument.svelte
@@ -1519,11 +1580,11 @@ export {};
 		{#if !isRecording && !isProcessing}
 			<!-- Start Recording Button -->
 			<button
-				class="btn btn-primary btn-lg" 
+				class="btn btn-primary btn-xl btn-circle" 
 				onclick={startRecording}
 				disabled={permissionDenied}
 			>
-				<span>🎙️ Antwort aufnehmen</span>
+				🎙️
 			</button>
 
 			{#if permissionDenied}
@@ -1584,9 +1645,10 @@ export {};
 			importance: number;
 		};
 		onRecordingComplete: (index: number, blob: Blob) => void;
+		totalQuestions?: number;
 	};
 
-	let { question, onRecordingComplete }: QuestionItemProps = $props();
+	let { question, onRecordingComplete, totalQuestions = 5 }: QuestionItemProps = $props();
 
 	// Hilfsfunktionen für Darstellung
 	function getImportanceLabel(importance: number): string {
@@ -1625,14 +1687,9 @@ export {};
 </script>
 
 <div class="bg-base-200 rounded-lg p-6">
-	<div class="mb-4 flex items-start justify-between">
-		<h4 class="text-lg font-bold">Frage {question.index + 1}:</h4>
-		<span class="badge {getImportanceClass(question.importance)}">
-			{getImportanceLabel(question.importance)}
-		</span>
+	<div class="mb-4">
+		<h4 class="text-lg font-bold">{question.question}</h4>
 	</div>
-
-	<p class="mb-4">{question.question}</p>
 
 	{#if question.context}
 		<div class="bg-base-300 mb-4 rounded p-3 text-sm">
@@ -1649,11 +1706,20 @@ export {};
 		/>
 	</div>
     
-    <PrivacyTooltip
-      note="Deine Aufnahme geht einmalig an OpenAI zur Transkription.
+    <div class="mt-3 flex items-center justify-between">
+        <div class="flex gap-2">
+            <span class="badge badge-neutral">Frage {question.index + 1}/{totalQuestions}</span>
+            <span class="badge {getImportanceClass(question.importance)}">
+                {getImportanceLabel(question.importance)}
+            </span>
+        </div>
+        
+        <PrivacyTooltip
+          note="Deine Aufnahme geht einmalig an OpenAI zur Transkription.
 Der Text fließt ins Übergabedokument ein. Die Audiospur wird nicht gespeichert.
 Hinweis: OpenAI kann Audiodaten zu Trainingszwecken speichern."
-    />
+        />
+    </div>
 </div>
 ```
 
@@ -1920,7 +1986,7 @@ export const knowgoState = $state({
   document: null as HandoverDocumentResponse | null,
   
   // Status-Flags
-  currentStep: 'drop' as 'drop' | 'record' | 'chaos' | 'questions' | 'result',
+  currentStep: 'start' as 'start' | 'record' | 'chaos' | 'questions' | 'result',
   loading: false,
   error: ''
 });
@@ -1994,15 +2060,15 @@ export function resetState() {
   knowgoState.questions = null;
   knowgoState.answers = {};
   knowgoState.document = null;
-  knowgoState.currentStep = 'drop';
+  knowgoState.currentStep = 'start';
   knowgoState.loading = false;
   knowgoState.error = '';
 }
 
 // Navigation zum nächsten oder vorherigen Schritt
 export function goToNextStep() {
-  const steps: Array<'drop' | 'record' | 'chaos' | 'questions' | 'result'> = [
-    'drop', 'record', 'chaos', 'questions', 'result'
+  const steps: Array<'start' | 'record' | 'chaos' | 'questions' | 'result'> = [
+    'start', 'record', 'chaos', 'questions', 'result'
   ];
   
   const currentIndex = steps.indexOf(knowgoState.currentStep);
@@ -2012,8 +2078,8 @@ export function goToNextStep() {
 }
 
 export function goToPreviousStep() {
-  const steps: Array<'drop' | 'record' | 'chaos' | 'questions' | 'result'> = [
-    'drop', 'record', 'chaos', 'questions', 'result'
+  const steps: Array<'start' | 'record' | 'chaos' | 'questions' | 'result'> = [
+    'start', 'record', 'chaos', 'questions', 'result'
   ];
   
   const currentIndex = steps.indexOf(knowgoState.currentStep);
@@ -2486,7 +2552,7 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 <div class="footer flex-col sm:flex-row lg:grid lg:grid-cols-3 lg:gap-1 bg-base-200 text-base-content p-10 pt-20 md:px-60 lg:px-90">
 	<nav>
 			  <h6 class="footer-title">Infos</h6>
-			  <a class="link link-hover">Über KnowGo</a>
+			  <a class="link link-hover" href="/about">Über KnowGo</a>
 			  <a class="link link-hover">Über Mich</a>
 			</nav>
 			<nav>
@@ -2496,8 +2562,8 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 			</nav>
 			<nav>
 			  <h6 class="footer-title">Interviews</h6>
-			  <a class="link link-hover">Benefits</a>
-			  <a class="link link-hover">Kalender</a>
+			  <a class="link link-hover" href="/interviews/benefits">Benefits</a>
+			  <a class="link link-hover" href="/interviews/calendar">Kalender</a>
 			</nav>
 				<div class="text-xs mt-10 col-span-2"><p><strong>Mit Hirn & Herz gebaut.</strong> Für die Prise Versuch-und-Irrtum.</p></div>
 				<p class="text-xs mt-10 font-bold">© {new Date().getFullYear()} Jessica Krecker</p>
@@ -2513,7 +2579,7 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 	import meme from "$lib/assets/urlaub.gif"
 
 	function navigateForward() {
-		goto('/knowgo');
+		goto('/knowgo/start');
 	}
 </script>
 <div class="relative w-full max-w-full sm:max-w-xl m-auto">
@@ -2548,7 +2614,7 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 	import Heading from '../../components/Heading.svelte';
 
 	function navigateForward() {
-		goto('/checkin/benefits');
+		goto('/interviews/benefits');
 	}
 
 	function gotoExit() {
@@ -2575,7 +2641,7 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 				</p>
 			</div>
 		</div>
-		<div>
+		<!-- <div>
 			<Heading level="h1">Wer steckt dahinter?</Heading>
 			<div class="prose mb-12">
 				<p>
@@ -2585,7 +2651,7 @@ export async function checkMicrophonePermission(): Promise<boolean> {
 					Webentwicklerin & Instructional Designerin
 				</p>
 			</div>
-		</div>
+		</div> -->
 	</div>
 
 	<button class="btn btn-primary btn-lg mb-6" onclick={navigateForward}
@@ -2899,7 +2965,7 @@ export async function POST({ request }) {
 	function goToAI() {
 		// Store survey results before navigating
 		storeSurveyResults();
-		goto('/checkin/final');
+		goto('/knowgo/start');
 	}
 
 	function goToCalendar() {
@@ -2979,7 +3045,7 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 	import Heading from '../../../components/Heading.svelte';
 
 	function navigateForward() {
-		goto('/knowgo/drop');
+		goto('/knowgo');
 	}
 </script>
 
@@ -3051,11 +3117,11 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 	}
 
 	function goToCalendar() {
-		goto('/calendar');
+		goto('/interviews/calendar');
 	}
 
 	function goToAI() {
-		goto('/checkin/final');
+		goto('/knowgo/start');
 	}
 </script>
 
@@ -3299,7 +3365,7 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 		<ul class="steps steps-horizontal w-full">
 			<li
 				class="step"
-				class:step-primary={['drop', 'record', 'chaos', 'questions', 'result'].includes(
+				class:step-primary={['start', 'record', 'chaos', 'questions', 'result'].includes(
 					knowgoState.currentStep
 				)}
 			>
@@ -3331,70 +3397,6 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 	<div>
 		{@render children()}
 	</div>
-</div>
-
-```
-
-# src\routes\knowgo\+page.svelte
-
-```svelte
-<script lang="ts">
-	import { goto } from '$app/navigation';
-	import Heading from '../../components/Heading.svelte';
-	import PrivacyTooltip from '../../components/PrivacyTooltip.svelte';
-	import { knowgoState, updateTaskDescription, resetState } from '../../lib/knowgo-state.svelte';
-	import { onMount } from 'svelte';
-
-	// Lokaler State für die Eingabe
-	let taskDescription = $state('');
-
-	// State bei Seitenaufruf zurücksetzen, falls nötig
-	onMount(() => {
-		// Bestehende Task-Beschreibung laden, falls vorhanden
-		if (knowgoState.taskDescription) {
-			taskDescription = knowgoState.taskDescription;
-		} else {
-			// State für neuen Durchlauf zurücksetzen
-			resetState();
-		}
-	});
-
-	function navigateToRecord() {
-		// Beschreibung im zentralen State speichern
-		updateTaskDescription(taskDescription);
-		// Zur nächsten Seite navigieren
-		goto('/knowgo/record');
-	}
-
-	function goToExit() {
-		goto('/exit');
-	}
-
-	// Prüfen, ob eine Beschreibung eingegeben wurde
-	let isValidDescription = $derived(taskDescription.trim().length > 0);
-</script>
-
-<div class="m-auto flex max-w-4xl flex-col items-center justify-center py-12">
-	<Heading level="h1">Welche Aufgabe gibst du ab?</Heading>
-	<p class="prose">📝 Kurz & knapp in einem Satz:</p>
-
-	<div class="w-full max-w-xl p-10">
-		<textarea
-			bind:value={taskDescription}
-			placeholder="Worum geht's?"
-			class="textarea textarea-primary textarea-lg h-32 w-full rounded border"
-		></textarea>
-	</div>
-
-	<button
-		class="btn btn-primary btn-lg mb-3"
-		onclick={navigateToRecord}
-		disabled={!isValidDescription}
-	>
-		🎙️ Mic me up
-	</button>
-
-	<PrivacyTooltip open primary note="Was du hier eintippst, bleibt erstmal lokal im Browser. Kein automatischer Versand, kein Tracking. Die nächsten Privacy Hinweise öffnest du auf Bedarf per Klick." />
 </div>
 
 ```
@@ -3597,39 +3599,46 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 </script>
 
 <div class="m-auto flex max-w-4xl flex-col items-center justify-center py-12">
-	<Heading level="h1">Und was ist mit...?</Heading>
-	<p class="prose max-w-xl text-center mb-6">
-		🤔 Die Fragen, die sonst eh kommen würden – jetzt schon beantwortet.
-	</p>
-
-	{#if localError || knowgoState.error}
-		<div class="alert alert-error mb-6 max-w-xl w-full">
-			<p>{localError || knowgoState.error}</p>
-		</div>
-	{/if}
-
-	{#if processingAnswers}
-		<div class="w-full flex flex-col items-center justify-center p-8">
-			<span class="loading loading-spinner loading-lg text-primary"></span>
-			<p class="mt-4 text-lg font-medium">Deine Antworten werden verarbeitet...</p>
-		</div>
+	{#if localLoading}
+	  <div class="w-full flex flex-col items-center justify-center p-8">
+		<span class="loading loading-spinner loading-lg text-primary"></span>
+		<p class="mt-4 text-lg font-medium">Intelligente Rückfragen werden generiert...</p>
+	  </div>
 	{:else}
-		<div class="max-w-3xl w-full">
-			<FollowUpQuestions 
-				questions={knowgoState.questions} 
-				loading={localLoading}
-				onFinished={handleFinished}
-				onTranscribeRequest={handleTranscribeRequest}
-			/>
+	  <Heading level="h1">Und was ist mit...?</Heading>
+	  <p class="prose max-w-xl text-center mb-6">
+		🤔 Die Fragen, die sonst eh kommen würden – jetzt schon beantwortet.
+	  </p>
+  
+	  {#if localError || knowgoState.error}
+		<div class="alert alert-error mb-6 max-w-xl w-full">
+		  <p>{localError || knowgoState.error}</p>
 		</div>
-	{/if}
-
-	{#if !localLoading && !knowgoState.questions}
+	  {/if}
+  
+	  {#if processingAnswers}
+		<div class="w-full flex flex-col items-center justify-center p-8">
+		  <span class="loading loading-spinner loading-lg text-primary"></span>
+		  <p class="mt-4 text-lg font-medium">Deine Antworten werden verarbeitet...</p>
+		</div>
+	  {:else}
+		<div class="max-w-3xl w-full">
+		  <FollowUpQuestions 
+			questions={knowgoState.questions} 
+			loading={false}
+			onFinished={handleFinished}
+			onTranscribeRequest={handleTranscribeRequest}
+		  />
+		</div>
+	  {/if}
+  
+	  {#if !localLoading && !knowgoState.questions}
 		<button class="btn btn-primary mt-6" onclick={goToChaosCheckPage}>
-			Zurück zum Chaos-Check
+		  Zurück zum Chaos-Check
 		</button>
+	  {/if}
 	{/if}
-</div>
+  </div>
 ```
 
 # src\routes\knowgo\record\+page.svelte
@@ -3647,15 +3656,15 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 	onMount(() => {
 		if (!knowgoState.taskDescription) {
 			// Zurück zur Drop-Seite, wenn keine Beschreibung vorhanden ist
-			goto('/knowgo/drop');
+			goto('/knowgo');
 			return;
 		}
 
 		clearError();
 	});
 
-	function goToDropPage() {
-		goto('/knowgo/');
+	function goToStart() {
+		goto('/knowgo/start');
 	}
 </script>
 
@@ -3669,7 +3678,7 @@ Die Daten über ausgewählte Faktoren und Intensität landen anonymisiert in ein
 		<div class="bg-base-200 p-4 rounded-lg mb-6 max-w-xl w-full">
 			<h3 class="font-bold">Aufgabenkontext:</h3>
 			<p>{knowgoState.taskDescription}</p>
-			<button class="btn btn-outline btn-xs mt-6" onclick={goToDropPage}>
+			<button class="btn btn-outline btn-xs mt-6" onclick={goToStart}>
 				ändern
 			</button>
 		</div>
@@ -3793,7 +3802,7 @@ Hinweis: OpenAI kann laut ihren Nutzungsbedingungen Audiodaten zu Trainingszweck
 
 	// Weiter zum Kalender
 	function navigateToCalendar() {
-		goto('/exit');
+		goto('/interviews/calendar');
 	}
 
 	function goToQuestionsPage() {
@@ -3828,6 +3837,70 @@ Hinweis: OpenAI kann laut ihren Nutzungsbedingungen Audiodaten zu Trainingszweck
 		</button>
 	{/if}
 </div>
+```
+
+# src\routes\knowgo\start\+page.svelte
+
+```svelte
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import Heading from '../../../components/Heading.svelte';
+	import PrivacyTooltip from '../../../components/PrivacyTooltip.svelte';
+	import { knowgoState, updateTaskDescription, resetState } from '../../../lib/knowgo-state.svelte';
+	import { onMount } from 'svelte';
+
+	// Lokaler State für die Eingabe
+	let taskDescription = $state('');
+
+	// State bei Seitenaufruf zurücksetzen, falls nötig
+	onMount(() => {
+		// Bestehende Task-Beschreibung laden, falls vorhanden
+		if (knowgoState.taskDescription) {
+			taskDescription = knowgoState.taskDescription;
+		} else {
+			// State für neuen Durchlauf zurücksetzen
+			resetState();
+		}
+	});
+
+	function navigateToRecord() {
+		// Beschreibung im zentralen State speichern
+		updateTaskDescription(taskDescription);
+		// Zur nächsten Seite navigieren
+		goto('/knowgo/record');
+	}
+
+	function goToExit() {
+		goto('/exit');
+	}
+
+	// Prüfen, ob eine Beschreibung eingegeben wurde
+	let isValidDescription = $derived(taskDescription.trim().length > 0);
+</script>
+
+<div class="m-auto flex max-w-4xl flex-col items-center justify-center py-12">
+	<Heading level="h1">Welche Aufgabe gibst du ab?</Heading>
+	<p class="prose">📝 Kurz & knapp in einem Satz:</p>
+
+	<div class="w-full max-w-xl p-10">
+		<textarea
+			bind:value={taskDescription}
+			placeholder="Worum geht's?"
+			class="textarea textarea-primary textarea-lg h-32 w-full rounded border"
+		></textarea>
+	</div>
+
+	<button
+		class="btn btn-primary btn-lg mb-3"
+		onclick={navigateToRecord}
+		disabled={!isValidDescription}
+	>
+		🎙️ Mic me up
+	</button>
+
+	<PrivacyTooltip open primary note="Was du hier eintippst, bleibt erstmal lokal im Browser. Kein automatischer Versand, kein Tracking. Die nächsten Privacy Hinweise öffnest du auf Bedarf per Klick." />
+</div>
+
 ```
 
 # static\favicon.png
