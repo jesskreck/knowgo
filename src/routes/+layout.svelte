@@ -33,8 +33,8 @@
 			</nav>
 			<nav>
 				<h6 class="footer-title">KnowGo</h6>
-				<a class="link link-hover">Register</a>
-				<a class="link link-hover">Login</a>
+				<a class="link link-hover" href="/knowgo">Register</a>
+				<a class="link link-hover" href="/knowgo">Login</a>
 			</nav>
 			<nav>
 			  <h6 class="footer-title">Interviews</h6>

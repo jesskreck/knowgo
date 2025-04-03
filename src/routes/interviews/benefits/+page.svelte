@@ -22,11 +22,11 @@
 			🤝 ein <span class="font-bold">1:1 Gespräch</span> über Wissenssilos, das zum Nachdenken anregt. 
 		</p>
 		<p>🔑 Teile deine Erfahrungen und Herausforderungen und hilf mir etwas zu bauen, das <span class="font-bold">wirklich funktioniert</span> — für dich und andere.</p>
-		<p>🤖 <span class="font-bold">Quick Win für Jetzt</span>: Ein Mini-Hack, deinem inneren "Ich erklär das zum 5. Mal"-Schreihals endlich Gehör verschafft.</p>
+		<p>🤖 <span class="font-bold">Quick Win für Jetzt</span>: Eine Urlaubsübergabe, die deine Kolleg*innen mit Kusshand nehmen!</p>
 	</div>
 
 	<button class="btn btn-primary btn-lg mb-3" onclick={goToCheckin}
-		>Zeig mal diesen Hack!</button
+		>Zur Urlaubsübergabe</button
 	>
 	<button class="btn btn-secondary btn-lg mb-3" onclick={goToCalendar}
 		>Gespräch vereinbaren</button
